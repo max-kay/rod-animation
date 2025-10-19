@@ -1,0 +1,15 @@
+[package]
+name = "wmts"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1.0.100"
+bincode = "2.0.1"
+chrono = "0.4.42"
+geo-types = "0.7.17"
+image = "0.25.8"
+mvt-reader = "2.1.0"
+rayon = "1.11.0"
+reqwest = { version = "0.12.24", features = ["blocking"] }
+skia-safe = "0.89.1"
