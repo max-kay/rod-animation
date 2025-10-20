@@ -84,12 +84,16 @@ impl Vector {
         Self { x, y }
     }
     pub fn norm(&self) -> f32 {
-        (self.x.powi(2) + self.y.powi(2)).sqrt()
+        (self.x * self.x + self.y * self.y).sqrt()
     }
     pub fn zeros() -> Self {
         Self { x: 0.0, y: 0.0 }
     }
+    pub fn is_finite(&self) -> bool {
+        self.x.is_finite() && self.y.is_finite()
+    }
 }
+
 impl Add for Vector {
     type Output = Self;
 
@@ -121,6 +125,7 @@ impl Mul<f32> for Vector {
 }
 impl_op_for_refs!(Vector, f32, Mul, mul);
 impl_op_for_refs!(f32, Vector, Mul, mul);
+
 impl Mul<Vector> for f32 {
     type Output = Vector;
 
@@ -141,14 +146,19 @@ impl Div<f32> for Vector {
     }
 }
 
+impl_op_for_refs!(Vector, f32, Div, div);
+
 #[derive(Clone, Copy, Debug)]
 pub struct Transform {
-    scale: f32,
-    translation: Vector,
+    pub(super) scale: f32,
+    pub(super) translation: Vector,
 }
 
 impl Transform {
     pub fn new(scale: f32, translation: Vector) -> Self {
+        assert!(scale.is_finite(), "scale was not finite");
+        assert!(scale > 0.0, "scale was not positive");
+        assert!(translation.is_finite(), "translation was not finite");
         Self { scale, translation }
     }
 
@@ -188,3 +198,44 @@ impl Mul for Transform {
 }
 
 impl_op_for_refs!(Transform, Mul, mul);
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    macro_rules! norm {
+        ($x:literal, $y:literal, $exp:literal) => {
+            let vec = Vector::new($x, $y);
+            let norm = vec.norm();
+            assert!(
+                (norm - $exp).abs() < 0.0000001,
+                "norm for {vec:?} was {norm}"
+            );
+        };
+    }
+    #[test]
+    fn norm() {
+        norm!(1.0, 0.0, 1.0);
+        norm!(0.0, 0.0, 0.0);
+        norm!(0.0, 1.0, 1.0);
+        norm!(4.0, 3.0, 5.0);
+        norm!(3.0, 4.0, 5.0);
+        norm!(-3.0, 4.0, 5.0);
+        norm!(-3.0, -4.0, 5.0);
+        norm!(3.0, -4.0, 5.0);
+    }
+
+    #[test]
+    fn mul_transform() {
+        let ts = vec![
+            Transform::new(2.0, Vector::new(1.0, 1.0)),
+            Transform::new(1.0, Vector::new(1.0, 1.0)),
+            Transform::new(0.1, Vector::new(1.0, 1.0)),
+        ];
+        for t in ts {
+            let new = t * t.invert();
+            assert!((1.0 - new.scale).abs() < 0.000001);
+            println!("{:?}", new.translation);
+            assert!(new.translation.norm() < 0.000001);
+        }
+    }
+}

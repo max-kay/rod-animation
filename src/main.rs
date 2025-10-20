@@ -9,23 +9,17 @@ use std::{
 use anyhow::{Result, anyhow};
 
 mod draw;
-mod geometry;
 mod map;
 mod track;
 mod vec;
 
 use draw::{ScenePos, Style};
-use geometry::{Area, Path};
 use map::MvtGetter;
 use skia_safe::Image;
 use track::Track;
 use vec::{Transform, Vector};
 
-use crate::{
-    draw::Renderable,
-    map::{TILE_SIZE, TileDescr},
-    track::get_tracks,
-};
+use crate::{draw::Renderable, map::TileDescr, track::get_tracks};
 
 const WIDTH: usize = 1920;
 const HEIGHT: usize = 1080;
@@ -60,7 +54,7 @@ pub fn fade_function(x: f32) -> f32 {
 pub fn lat_long_to_vec(lat: f32, lon: f32) -> Vector {
     Vector::new(
         0.5 + lon / 360.0,
-        (PI - (FRAC_PI_4 - lat.to_radians()).tan().ln()) / TAU,
+        (PI - (FRAC_PI_4 - lat.to_radians() / 2.0).tan().ln()) / TAU,
     )
 }
 
@@ -152,52 +146,21 @@ impl World {
     }
 
     pub fn get_tiles_fixed(&self, scene: ScenePos, zoom: u32) -> Vec<TileDescr> {
-        let num_tiles = 2_u32.pow(zoom);
-
-        let scale = (num_tiles * TILE_SIZE) as f32;
-        let inv_scale = 1.0 / scale;
-        let scaled_center = scene.center * scale;
-        let screen_center = Vector::new(WIDTH as f32 / 2.0, HEIGHT as f32 / 2.0);
-        let translation = screen_center - scaled_center;
-
-        let screen_min = Vector::new(0.0, 0.0);
-        let screen_max = Vector::new(WIDTH as f32, HEIGHT as f32);
-
-        let world_min = (screen_min - translation) * inv_scale;
-        let world_max = (screen_max - translation) * inv_scale;
-
-        // Convert World Coordinates to Tile Indices (X, Y)
-        // We only care about tiles within the map's valid range [0, 2^Z - 1]
-        let max_index = 2u32.pow(zoom) as i32 - 1; // Used i32 for safe bounds checking
-
-        // Minimum tile indices (clamped at 0)
-        let x_min_i = (world_min.x * num_tiles as f32).floor().max(0.0) as i32;
-        let y_min_i = (world_min.y * num_tiles as f32).floor().max(0.0) as i32;
-
-        // Maximum tile indices (clamped at max_index, and inclusive)
-        let x_max_i = (world_max.x * num_tiles as f32)
-            .floor()
-            .min(max_index as f32) as i32;
-        let y_max_i = (world_max.y * num_tiles as f32)
-            .floor()
-            .min(max_index as f32) as i32;
-
+        let min_x = (scene.world_min().x * 2f32.powi(zoom as i32).floor()) as u32;
+        let min_y = (scene.world_min().y * 2f32.powi(zoom as i32).floor()) as u32;
+        let max_x = (scene.world_max().x * 2f32.powi(zoom as i32).floor()) as u32;
+        let max_y = (scene.world_max().y * 2f32.powi(zoom as i32).floor()) as u32;
         let mut tiles = Vec::new();
-
-        // Iterate over the X and Y tile ranges (inclusive)
-        for x_i in x_min_i..=x_max_i {
-            for y_i in y_min_i..=y_max_i {
-                // Only collect tiles if the coordinates are within the global map limits [0, max_index]
-                if x_i >= 0 && x_i <= max_index && y_i >= 0 && y_i <= max_index {
-                    tiles.push(TileDescr {
-                        z: zoom as u32,
-                        x: x_i,
-                        y: y_i,
-                    });
+        for x in min_x..=max_x {
+            for y in min_y..=max_y {
+                let tile = TileDescr { z: zoom, x, y };
+                if !tile.valid() {
+                    eprintln!("encountered invalid tile: {:?}", tile);
+                    continue;
                 }
+                tiles.push(tile)
             }
         }
-
         tiles
     }
 
@@ -227,7 +190,6 @@ fn main() {
         "took {}s to initialize world",
         start.elapsed().as_secs_f32()
     );
-
     let start = Instant::now();
     Renderable::Image {
         center: lat_long_to_vec(45.024183710835956, 4.765212115427184),
@@ -238,6 +200,7 @@ fn main() {
     }
     .make_file()
     .unwrap();
+
     // Renderable::Fixed {
     //     center: Position::LatLong(LatLong::from_float(45.024183710835956, 4.765212115427184)),
     //     zoomlevel: 1.0,
@@ -251,10 +214,10 @@ fn main() {
     // .unwrap();
     Renderable::Fixed {
         center: lat_long_to_vec(45.18838548473186, 5.719852490686185),
-        zoomlevel: 7.0,
+        zoomlevel: 10.0,
         start: 60 * 60 * 15,
         end: 60 * 60 * 48,
-        duration_s: 0.3,
+        duration_s: 10.0,
         people: Vec::new(),
         pin_height: 250.0,
     }

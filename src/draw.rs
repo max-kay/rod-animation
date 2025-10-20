@@ -268,8 +268,26 @@ impl ScenePos {
         Transform::new(scale, translation)
     }
 
+    pub fn screen_to_world(&self) -> Transform {
+        let scale = 2f32.powf(-self.zoom) / TILE_SIZE as f32;
+        let scaled_screen_center = scale * Vector::new(WIDTH as f32 / 2.0, HEIGHT as f32 / 2.0);
+        Transform::new(scale, -scaled_screen_center + self.center)
+    }
+
     pub fn tile_to_screen(&self, tile: TileDescr) -> Transform {
-        self.world_to_screen() * tile.tile_to_world()
+        let scale = TILE_SIZE as f32 * 2f32.powf(self.zoom - tile.z as f32);
+        let translation = (scale * Vector::new(tile.x as f32, tile.y as f32))
+            - (TILE_SIZE as f32 * 2f32.powf(self.zoom) * self.center)
+            + Vector::new(WIDTH as f32 / 2.0, HEIGHT as f32 / 2.0);
+        Transform::new(scale, translation)
+    }
+
+    pub fn world_min(&self) -> Vector {
+        self.screen_to_world() * Vector::zeros()
+    }
+
+    pub fn world_max(&self) -> Vector {
+        self.screen_to_world() * Vector::new(WIDTH as f32, HEIGHT as f32)
     }
 }
 
@@ -289,6 +307,7 @@ impl Frame {
                 let tiles: Option<Vec<_>> = tiles.iter().map(|tile| map.get_tile(*tile)).collect();
                 if tiles.is_none() {
                     eprintln!("some tiles needed were not loaded");
+                    return;
                 }
                 let tiles = tiles.expect("checked above");
                 for (id, instr) in WORLD.style.get_layers() {

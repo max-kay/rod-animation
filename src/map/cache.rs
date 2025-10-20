@@ -14,6 +14,9 @@ pub struct MvtGetter {
 impl MvtGetter {
     pub fn new() -> Result<Self> {
         let mut file_cache = HashSet::new();
+        if !fs::exists(CACHE_PATH)? {
+            fs::create_dir(CACHE_PATH)?;
+        }
         for entry in fs::read_dir(CACHE_PATH)? {
             if let Ok(entry) = entry {
                 let path = entry.path();
@@ -49,21 +52,32 @@ impl MvtGetter {
         self.mem_cache.get(&tile)
     }
 
+    fn try_load_from_file(&mut self, tile: TileDescr) -> Result<()> {
+        let data = bincode::decode_from_std_read(
+            &mut File::open(&tile.to_path())?,
+            bincode::config::standard(),
+        )?;
+        self.mem_cache.insert(tile, data);
+        return Ok(());
+    }
+
     pub fn load_tile(&mut self, tile: TileDescr) -> Result<()> {
         if self.mem_cache.contains_key(&tile) {
             return Ok(());
         }
 
         if self.file_cache.contains(&tile) {
-            let data = bincode::decode_from_std_read(
-                &mut File::open(&tile.to_path())?,
-                bincode::config::standard(),
-            )?;
-            self.mem_cache.insert(tile, data);
-            return Ok(());
+            match self.try_load_from_file(tile) {
+                Ok(_) => return Ok(()),
+                Err(_) => {
+                    self.file_cache.remove(&tile);
+                }
+            }
         }
 
-        let response = reqwest::blocking::get(&tile.to_url())?;
+        // return Ok(());
+
+        let response = reqwest::blocking::get(dbg!(&tile.to_url()))?;
         let bytes = response.bytes()?;
         let buf = bytes.to_vec();
         let data = MapData::from_reader(
