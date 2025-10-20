@@ -1,7 +1,7 @@
 use std::{fs, process::Command};
 
 use anyhow::Result;
-use log::error;
+use log::{error, info};
 use rayon::iter::{IndexedParallelIterator, IntoParallelRefIterator, ParallelIterator};
 use skia_safe::{
     Bitmap, Canvas, Color, Color4f, ColorType, FilterMode, Image, ImageInfo, OwnedCanvas, Paint,
@@ -404,6 +404,7 @@ impl Frame {
 
 pub enum Renderable {
     Image {
+        name: String,
         center: Vector,
         zoomlevel: f32,
         time: u32,
@@ -411,6 +412,7 @@ pub enum Renderable {
         pin_height: f32,
     },
     Fixed {
+        name: String,
         center: Vector,
         zoomlevel: f32,
         start: u32,
@@ -422,9 +424,17 @@ pub enum Renderable {
 }
 
 impl Renderable {
+    pub fn name(&self) -> &str {
+        match &self {
+            Renderable::Image { name, .. } => name,
+            Renderable::Fixed { name, .. } => name,
+        }
+    }
+
     pub fn to_frames(&self) -> Vec<Frame> {
         match self {
             Renderable::Image {
+                name: _,
                 center: _,
                 zoomlevel: _,
                 time: _,
@@ -433,6 +443,7 @@ impl Renderable {
             } => unreachable!(),
 
             Renderable::Fixed {
+                name: _,
                 center,
                 zoomlevel,
                 start,
@@ -459,6 +470,7 @@ impl Renderable {
 
     pub fn make_file(self) -> Result<()> {
         if let Self::Image {
+            name,
             center,
             zoomlevel,
             time,
@@ -471,9 +483,11 @@ impl Renderable {
                 people: people.clone(),
                 pin_height,
             };
+            info!("loading tiles for {name}");
             WORLD.load_tiles_at(frame.scene_pos)?;
+            info!("finished loading tiles for {name}");
             let image: skia_safe::Image = frame.render();
-            let mut file = std::fs::File::create(&format!("{OUT_PATH}/out.png"))?;
+            let mut file = std::fs::File::create(&format!("{OUT_PATH}/{name}.png"))?;
             skia_safe::png_encoder::encode(
                 &image.peek_pixels().expect("failed to get pixels."),
                 &mut file,
@@ -489,11 +503,14 @@ impl Renderable {
         } else {
             fs::create_dir_all(tmp_path)?;
         }
+        let name = self.name();
 
         let frames = self.to_frames();
+        info!("loading tiles for {name}");
         for frame in &frames {
             WORLD.load_tiles_at(frame.scene_pos)?;
         }
+        info!("finished loading tiles for {name}");
         frames.par_iter().enumerate().for_each(|(i, frame)| {
             let image: skia_safe::Image = frame.render();
             let mut file =

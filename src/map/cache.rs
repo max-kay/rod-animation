@@ -1,8 +1,10 @@
 use anyhow::{Result, anyhow};
-use log::debug;
+use log::{debug, info};
+use reqwest::blocking::Client;
 use std::{
     collections::{HashMap, HashSet},
     fs::{self, File},
+    io::Write,
 };
 
 use super::{CACHE_PATH, MapData, TileDescr};
@@ -10,6 +12,7 @@ use super::{CACHE_PATH, MapData, TileDescr};
 pub struct MvtGetter {
     pub file_cache: HashSet<TileDescr>,
     pub mem_cache: HashMap<TileDescr, MapData>,
+    client: Client,
 }
 
 impl MvtGetter {
@@ -21,7 +24,7 @@ impl MvtGetter {
         for entry in fs::read_dir(CACHE_PATH)? {
             if let Ok(entry) = entry {
                 let path = entry.path();
-                if path.extension().and_then(|s| s.to_str()) != Some("tile") {
+                if path.extension().and_then(|s| s.to_str()) != Some("mvt") {
                     continue;
                 }
                 let mut split = path
@@ -44,6 +47,7 @@ impl MvtGetter {
         Ok(Self {
             file_cache,
             mem_cache: HashMap::new(),
+            client: Client::new(),
         })
     }
 }
@@ -54,11 +58,15 @@ impl MvtGetter {
     }
 
     fn try_load_from_file(&mut self, tile: TileDescr) -> Result<()> {
-        let data = bincode::decode_from_std_read(
-            &mut File::open(&tile.to_path())?,
-            bincode::config::standard(),
-        )?;
-        self.mem_cache.insert(tile, data);
+        let data = fs::read(tile.to_path())?;
+        self.mem_cache.insert(
+            tile,
+            MapData::from_reader(
+                tile,
+                mvt_reader::Reader::new(data)
+                    .map_err(|_| anyhow!("could not create Mvt Reader"))?,
+            )?,
+        );
         return Ok(());
     }
 
@@ -71,6 +79,7 @@ impl MvtGetter {
             match self.try_load_from_file(tile) {
                 Ok(_) => return Ok(()),
                 Err(_) => {
+                    info!("kicked {tile:?} out of file cache");
                     self.file_cache.remove(&tile);
                 }
             }
@@ -79,15 +88,15 @@ impl MvtGetter {
         // return Ok(());
 
         debug!("requesting tile: z={} x={} y={}", tile.z, tile.x, tile.y);
-        let response = reqwest::blocking::get(&tile.to_url())?;
+        let response = self.client.get(&tile.to_url()).send()?;
         let bytes = response.bytes()?;
         let buf = bytes.to_vec();
+        let mut file = File::create(&tile.to_path())?;
+        file.write_all(&buf)?;
         let data = MapData::from_reader(
             tile,
-            mvt_reader::Reader::new(buf).map_err(|_| anyhow!("could not creat Mvt Reader"))?,
+            mvt_reader::Reader::new(buf).map_err(|_| anyhow!("could not create Mvt Reader"))?,
         )?;
-        let mut file = File::create(&tile.to_path())?;
-        bincode::encode_into_std_write(&data, &mut file, bincode::config::standard())?;
         self.file_cache.insert(tile);
         self.mem_cache.insert(tile, data);
         Ok(())

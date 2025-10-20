@@ -1,6 +1,5 @@
 use std::ops::{Add, Div, Mul, Neg};
 
-use bincode::{Decode, Encode};
 use geo_types::Coord;
 
 macro_rules! impl_op_for_refs {
@@ -56,7 +55,7 @@ macro_rules! complete_group {
     };
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Decode, Encode)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Vector {
     pub x: f32,
     pub y: f32,

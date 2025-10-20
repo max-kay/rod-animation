@@ -185,7 +185,7 @@ static MAP_DATA: LazyLock<RwLock<MvtGetter>> =
     LazyLock::new(|| RwLock::new(MvtGetter::new().expect("failed to initialize MvtGetter")));
 
 fn main() {
-    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("debug")).init();
 
     let start = Instant::now();
     LazyLock::force(&WORLD);
@@ -196,6 +196,7 @@ fn main() {
 
     let start = Instant::now();
     Renderable::Image {
+        name: "image".to_string(),
         center: lat_long_to_vec(45.024183710835956, 4.765212115427184),
         zoomlevel: 7.0,
         time: 60 * 60 * 12 * 3,
@@ -217,8 +218,9 @@ fn main() {
     // .make_file()
     // .unwrap();
     Renderable::Fixed {
+        name: "Grenoble".to_string(),
         center: lat_long_to_vec(45.18838548473186, 5.719852490686185),
-        zoomlevel: 10.0,
+        zoomlevel: 11.0,
         start: 60 * 60 * 15,
         end: 60 * 60 * 48,
         duration_s: 10.0,

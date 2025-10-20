@@ -1,8 +1,9 @@
+use std::time::Instant;
+
 use anyhow::{Result, anyhow};
-use log::info;
+use log::{info, trace};
 use skia_safe::{OwnedCanvas, PathFillType};
 
-use bincode::{Decode, Encode};
 use geo_types::{LineString, Polygon, geometry::Geometry};
 use mvt_reader::Reader;
 
@@ -33,7 +34,7 @@ const LAYER_NAMES: &'static [&'static str] = &[
     "aerialways",
 ];
 
-#[derive(Hash, Debug, Clone, Copy, PartialEq, Eq, Encode, Decode)]
+#[derive(Hash, Debug, Clone, Copy, PartialEq, Eq)]
 pub struct TileDescr {
     pub z: u32,
     pub x: u32,
@@ -49,7 +50,7 @@ impl TileDescr {
     }
 
     fn to_file_name(&self) -> String {
-        format!("{}_{}_{}.tile", self.z, self.x, self.y)
+        format!("{}_{}_{}.mvt", self.z, self.x, self.y)
     }
 
     fn to_path(&self) -> String {
@@ -62,7 +63,7 @@ impl TileDescr {
     }
 }
 
-#[derive(Encode, Decode, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub struct Path(pub Vec<Vector>);
 
 impl Path {
@@ -77,7 +78,6 @@ impl Path {
             let trans_point = instructions.transform * point;
             path.line_to((trans_point.x, trans_point.y));
         }
-        path.close();
         if let Some(style) = instructions.path_style() {
             canvas.draw_path(&path, &style);
         }
@@ -104,9 +104,9 @@ impl Path {
     }
 }
 
-#[derive(Encode, Decode, Default, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub struct Area {
-    pub outer: Vec<Path>,
+    pub outer: Path,
     pub inner: Vec<Path>,
 }
 
@@ -128,9 +128,7 @@ impl Area {
             path.close();
         };
 
-        for path_data in &self.outer {
-            build_contour(path_data);
-        }
+        build_contour(&self.outer);
 
         for path_data in &self.inner {
             build_contour(path_data);
@@ -145,11 +143,9 @@ impl Area {
     /// return true if winding rule was not followed
     pub fn enforce_winding(&mut self) -> bool {
         let mut had_flip = false;
-        for path in &mut self.outer {
-            if path.get_signed_area_sum() < 0.0 {
-                path.reverse();
-                had_flip = true;
-            }
+        if self.outer.get_signed_area_sum() < 0.0 {
+            self.outer.reverse();
+            had_flip = true;
         }
         for path in &mut self.inner {
             if path.get_signed_area_sum() > 0.0 {
@@ -160,7 +156,7 @@ impl Area {
         had_flip
     }
 }
-#[derive(Encode, Decode)]
+
 pub struct MapData {
     pub descr: TileDescr,
     layers: Vec<Layer>,
@@ -179,6 +175,7 @@ impl MapData {
 
 impl MapData {
     pub fn from_reader(descr: TileDescr, reader: Reader) -> Result<Self> {
+        let start = Instant::now();
         let mut layers = Vec::new();
         for meta in reader
             .get_layer_metadata()
@@ -213,6 +210,10 @@ impl MapData {
                 areas,
             })
         }
+        trace!(
+            "took {} ms to parse map data from mvt",
+            start.elapsed().as_secs_f64() * 1000.0
+        );
 
         Ok(MapData { descr, layers })
     }
@@ -220,13 +221,13 @@ impl MapData {
 
 fn convert_polygon(polygon: Polygon<f32>, extent: f32, areas: &mut Vec<Area>) {
     areas.push(Area {
-        outer: vec![Path(
+        outer: Path(
             polygon
                 .exterior()
                 .coords()
                 .map(|p| Vector::from(p) / extent)
                 .collect(),
-        )],
+        ),
         inner: polygon
             .interiors()
             .iter()
@@ -276,7 +277,6 @@ fn convert_geometry(
     }
 }
 
-#[derive(Encode, Decode)]
 pub struct Layer {
     id: String,
     paths: Vec<Path>,
