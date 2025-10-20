@@ -1,4 +1,5 @@
 use anyhow::{Result, anyhow};
+use log::debug;
 use std::{
     collections::{HashMap, HashSet},
     fs::{self, File},
@@ -77,7 +78,8 @@ impl MvtGetter {
 
         // return Ok(());
 
-        let response = reqwest::blocking::get(dbg!(&tile.to_url()))?;
+        debug!("requesting tile: z={} x={} y={}", tile.z, tile.x, tile.y);
+        let response = reqwest::blocking::get(&tile.to_url())?;
         let bytes = response.bytes()?;
         let buf = bytes.to_vec();
         let data = MapData::from_reader(

@@ -1,6 +1,7 @@
 use std::{fs, process::Command};
 
 use anyhow::Result;
+use log::error;
 use rayon::iter::{IndexedParallelIterator, IntoParallelRefIterator, ParallelIterator};
 use skia_safe::{
     Bitmap, Canvas, Color, Color4f, ColorType, FilterMode, Image, ImageInfo, OwnedCanvas, Paint,
@@ -306,7 +307,7 @@ impl Frame {
             OneOrTwo::One(tiles) => {
                 let tiles: Option<Vec<_>> = tiles.iter().map(|tile| map.get_tile(*tile)).collect();
                 if tiles.is_none() {
-                    eprintln!("some tiles needed were not loaded");
+                    error!("some tiles needed were not loaded");
                     return;
                 }
                 let tiles = tiles.expect("checked above");
@@ -324,13 +325,13 @@ impl Frame {
                 let less_detail: Option<Vec<_>> =
                     less_detail.iter().map(|tile| map.get_tile(*tile)).collect();
                 if less_detail.is_none() {
-                    eprintln!("some less_detail needed were not loaded");
+                    error!("some tiles needed were not loaded");
                 }
                 let less_detail = less_detail.expect("checked above");
                 let more_detail: Option<Vec<_>> =
                     more_detail.iter().map(|tile| map.get_tile(*tile)).collect();
                 if more_detail.is_none() {
-                    eprintln!("some more_detail needed were not loaded");
+                    error!("some tiles needed were not loaded");
                 }
                 let more_detail = more_detail.expect("checked above");
                 let opacity = fade_function(self.scene_pos.zoom.fract());
@@ -377,7 +378,7 @@ impl Frame {
 
         for person in &self.people {
             if WORLD.pins.contains_key(person) {
-                eprintln!("{person} wurde nicht gefunden!")
+                error!("{person} wurde nicht gefunden!")
             }
         }
 

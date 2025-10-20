@@ -7,6 +7,7 @@ use std::{
 };
 
 use anyhow::{Result, anyhow};
+use log::{error, info};
 
 mod draw;
 mod map;
@@ -111,7 +112,7 @@ impl World {
                 panic!("No pin found for {}", val);
             }
         }
-        println!("World is initialized");
+        info!("World is initialized");
         this
     }
 }
@@ -155,7 +156,7 @@ impl World {
             for y in min_y..=max_y {
                 let tile = TileDescr { z: zoom, x, y };
                 if !tile.valid() {
-                    eprintln!("encountered invalid tile: {:?}", tile);
+                    error!("encountered invalid tile: {:?}", tile);
                     continue;
                 }
                 tiles.push(tile)
@@ -184,12 +185,15 @@ static MAP_DATA: LazyLock<RwLock<MvtGetter>> =
     LazyLock::new(|| RwLock::new(MvtGetter::new().expect("failed to initialize MvtGetter")));
 
 fn main() {
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
+
     let start = Instant::now();
     LazyLock::force(&WORLD);
-    println!(
+    info!(
         "took {}s to initialize world",
         start.elapsed().as_secs_f32()
     );
+
     let start = Instant::now();
     Renderable::Image {
         center: lat_long_to_vec(45.024183710835956, 4.765212115427184),
@@ -223,5 +227,5 @@ fn main() {
     }
     .make_file()
     .unwrap();
-    println!("took {}s", start.elapsed().as_secs_f32());
+    info!("took {}s", start.elapsed().as_secs_f32());
 }

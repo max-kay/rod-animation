@@ -1,4 +1,5 @@
 use anyhow::{Result, anyhow};
+use log::info;
 use skia_safe::{OwnedCanvas, PathFillType};
 
 use bincode::{Decode, Encode};
@@ -203,7 +204,7 @@ impl MapData {
             }
 
             if rewound_area {
-                eprintln!("had to rewind area")
+                info!("had to rewind area")
             }
 
             layers.push(Layer {

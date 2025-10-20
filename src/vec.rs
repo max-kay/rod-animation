@@ -202,6 +202,7 @@ impl_op_for_refs!(Transform, Mul, mul);
 #[cfg(test)]
 mod test {
     use super::*;
+
     macro_rules! norm {
         ($x:literal, $y:literal, $exp:literal) => {
             let vec = Vector::new($x, $y);
@@ -234,7 +235,6 @@ mod test {
         for t in ts {
             let new = t * t.invert();
             assert!((1.0 - new.scale).abs() < 0.000001);
-            println!("{:?}", new.translation);
             assert!(new.translation.norm() < 0.000001);
         }
     }
