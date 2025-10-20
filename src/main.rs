@@ -55,7 +55,7 @@ pub fn fade_function(x: f32) -> f32 {
 pub fn lat_long_to_vec(lat: f32, lon: f32) -> Vector {
     Vector::new(
         0.5 + lon / 360.0,
-        (PI - (FRAC_PI_4 - lat.to_radians() / 2.0).tan().ln()) / TAU,
+        (PI - (FRAC_PI_4 + lat.to_radians() / 2.0).tan().ln()) / TAU,
     )
 }
 
