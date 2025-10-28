@@ -1,41 +1,41 @@
-use std::{io, sync::LazyLock};
+use std::{collections::HashMap, io, path, sync::LazyLock};
 
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 use chrono::NaiveDateTime;
 
-use crate::{TRACK_PATH, lat_long_to_vec, vec::Vector};
+use crate::{PEOPLE, TRACK_PATH, draw::Pin, lat_long_to_vec, vec::Vector};
 
-pub fn get_tracks() -> Result<Vec<Track>> {
-    let mut tracks = Vec::new();
-    for file in std::fs::read_dir(TRACK_PATH)? {
-        let path = file?.path();
-        if path.extension().and_then(|s| s.to_str()) != Some("txt") {
-            continue;
-        }
-        let name = path
-            .iter()
-            .last()
-            .unwrap()
-            .to_str()
-            .unwrap()
-            .split(".")
-            .next()
-            .unwrap()
-            .to_string();
-        tracks.push(Track::from_file(&name)?)
+pub fn get_checkpoints() -> Result<HashMap<String, (Vector, Pin)>> {
+    [
+        ("Grenoble", lat_long_to_vec(45.242976, 5.644920)),
+        ("Avignon", lat_long_to_vec(43.921494, 4.779126)),
+        ("Perpignan", lat_long_to_vec(42.647380, 2.894101)),
+        (
+            "Barcelona",
+            lat_long_to_vec(41.37875146251132, 2.1690145515198394),
+        ),
+    ]
+    .iter()
+    .map(|(name, pos)| match Pin::load(name, 1888.0, 4672.0) {
+        Ok(pin) => Ok((name.to_string(), (*pos, pin))),
+        Err(_) => Err(anyhow!("could not get pin")),
+    })
+    .collect()
+}
+
+pub fn get_tracks() -> Result<HashMap<String, Track>> {
+    let mut tracks = HashMap::new();
+    for name in PEOPLE {
+        let pin = Pin::load(name, 1731.0, 5488.0)?;
+        let path = TRACK_PATH.join(format!("{name}.txt"));
+        tracks.insert(name.to_string(), Track::from_file(&path, pin)?);
     }
     Ok(tracks)
 }
 
 pub const TIME_ZERO: LazyLock<NaiveDateTime> = LazyLock::new(|| {
-    NaiveDateTime::parse_from_str("2025-04-14T19:00:00", "%Y-%m-%dT%H:%M:%S").unwrap()
+    NaiveDateTime::parse_from_str("2025-04-14T00:00:00", "%Y-%m-%dT%H:%M:%S").unwrap()
 });
-
-// pub const TIME_END: LazyLock<NaiveDateTime> = LazyLock::new(|| {
-//     NaiveDateTime::parse_from_str("2025-04-19T16:05:28", "%Y-%m-%dT%H:%M:%S").unwrap()
-// });
-// pub const TIME_END_S: LazyLock<u32> =
-//     LazyLock::new(|| (*TIME_END - *TIME_ZERO).num_seconds() as u32);
 
 pub struct TrackingPoint {
     pub time: u32,
@@ -43,13 +43,13 @@ pub struct TrackingPoint {
 }
 
 pub struct Track {
-    pub name: String,
     pub points: Vec<TrackingPoint>,
+    pub pin: Pin,
 }
 
 impl Track {
-    pub fn from_file(name: &str) -> Result<Self> {
-        let file = std::fs::File::open(format!("{TRACK_PATH}/{name}.txt"))?;
+    pub fn from_file(path: impl AsRef<path::Path>, pin: Pin) -> Result<Self> {
+        let file = std::fs::File::open(path)?;
         let s = io::read_to_string(file)?;
         let mut points = Vec::new();
         for line in s.lines() {
@@ -63,10 +63,7 @@ impl Track {
 
             points.push(TrackingPoint { time, position })
         }
-        Ok(Self {
-            name: name.to_string(),
-            points,
-        })
+        Ok(Self { pin, points })
     }
 
     pub fn get_position(&self, time: u32) -> Option<Vector> {
@@ -77,8 +74,12 @@ impl Track {
                     return Some(self.points[0].position);
                 }
                 if idx == self.points.len() {
-                    return None;
-                    // TODO: how long should they stay at end?
+                    let last = self.points.last().unwrap();
+                    if time - last.time < 60 * 60 * 5 {
+                        return Some(last.position);
+                    } else {
+                        return None;
+                    }
                 }
                 let t0 = self.points[idx - 1].time;
                 let t1 = self.points[idx].time;
@@ -88,5 +89,19 @@ impl Track {
                 Some(v0 + (v1 - v0) * fraction)
             }
         }
+    }
+
+    pub fn valid_times(&self) -> String {
+        let t_0 = chrono::Duration::seconds(self.points[0].time as i64);
+        let t_1 = chrono::Duration::seconds(self.points.last().unwrap().time as i64);
+        format!(
+            "{}T{}:{} bis {}T{}:{}",
+            t_0.num_days(),
+            t_0.num_hours() - t_0.num_days() * 24,
+            t_0.num_minutes() - t_0.num_hours() * 60,
+            t_1.num_days(),
+            t_1.num_hours() - t_1.num_days() * 24,
+            t_1.num_minutes() - t_1.num_hours() * 60,
+        )
     }
 }

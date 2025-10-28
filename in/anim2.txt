@@ -1,0 +1,12 @@
+Animation
+# Kommentar
+
+Mitte Luca[2T7:30]; Clarissa[2T7:30]
+Zoom 11.5
+Zeit 2T7:30; 2T7:30
+
+Dauer 5.0
+
+Pins 
+Pingrösse 400
+Checkpoints

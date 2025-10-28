@@ -1,0 +1,13 @@
+
+Animation
+
+# Kommentar
+
+Mitte (47, 8, 8); Luca[1T19:30] # Kommentar
+Zoom 7.3; 12.0
+Zeit 1T19:30; 2T18:50
+Dauer 30.2
+
+Pins Luca; Louis; Marc
+Pingrösse 20
+Checkpoints

@@ -1,6 +1,5 @@
 **/.DS_Store
 /target
-/.cache
-/pins
 /out
-/tracks
+/res/cache
+/res/hashes.json

@@ -1,0 +1,10 @@
+Bild
+# Kommentar
+
+Mitte Luca[8T19:30] # Kommentar
+Zoom 7.3
+Zeit 1T19:30
+
+Pins Luca; Louis; Marc
+Pingrösse 20
+Checkpoints

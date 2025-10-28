@@ -1,0 +1,355 @@
+[
+  {
+    "layer_name": "land",
+    "sub_types": [
+      {
+        "conditions": [
+          {
+            "key": "kind",
+            "values": [
+              {"string": "shingle"},
+              {"string": "retail"},
+              {"string": "industrial"},
+              {"string": "residential"},
+              {"string": "garages"},
+              {"string": "playground"},
+              {"string": "commercial"},
+              {"string": "garden"},
+              {"string": "landfill"}
+            ],
+            "white_list": true
+          }
+        ],
+        "style": {
+          "fill": 0,
+          "stroke": null
+        }
+      },
+      {
+        "conditions": [
+          {
+            "key": "kind",
+            "values": [
+              {"string": "forest"}
+            ],
+            "white_list": true
+          }
+        ],
+        "style": {
+          "fill": null,
+          "stroke": null
+        },
+        "min_zoomlevel": 10
+
+      }
+    ]
+  },
+  {
+    "layer_name": "ocean",
+    "sub_types": [],
+    "fall_back": {
+      "fill": 5,
+      "stroke": null
+    }
+  },
+  {
+    "layer_name": "water_polygons",
+    "sub_types": [
+      {
+        "conditions": [
+          {
+            "key": "kind",
+            "values": [],
+            "white_list": false
+          }
+        ],
+        "style": {
+          "fill": 5,
+          "stroke": null
+        }
+      }
+    ]
+  },
+  {
+    "layer_name": "water_lines",
+    "sub_types": [
+      {
+        "conditions": [
+          {
+            "key": "kind",
+            "values": [],
+            "white_list": true
+          },
+          {
+            "key": "tunnel",
+            "values": [{"bool": false}],
+            "white_list": false
+          }
+        ],
+        "style": {
+          "fill": null,
+          "stroke": [3, 5]
+        }
+      }
+    ]
+  },
+  {
+    "layer_name": "dam_lines",
+    "sub_types": [
+      {
+        "conditions": [
+          {
+            "key": "kind",
+            "values": [],
+            "white_list": true
+          }
+        ],
+        "style": {
+          "fill": null,
+          "stroke": null
+        }
+      }
+    ]
+  },
+  {
+    "layer_name": "dam_polygons",
+    "sub_types": [
+      {
+        "conditions": [
+          {
+            "key": "kind",
+            "values": [],
+            "white_list": true
+          }
+        ],
+        "style": {
+          "fill": null,
+          "stroke": null
+        }
+      }
+    ]
+  },
+  {
+    "layer_name": "pier_lines",
+    "sub_types": [
+      {
+        "conditions": [
+          {
+            "key": "kind",
+            "values": [],
+            "white_list": true
+          }
+        ],
+        "style": {
+          "fill": null,
+          "stroke": null
+        }
+      }
+    ]
+  },
+  {
+    "layer_name": "pier_polygons",
+    "sub_types": [
+      {
+        "conditions": [
+          {
+            "key": "kind",
+            "values": [],
+            "white_list": true
+          }
+        ],
+        "style": {
+          "fill": null,
+          "stroke": null
+        }
+      }
+    ]
+  },
+  {
+    "layer_name": "boundaries",
+    "sub_types": [
+      {
+        "conditions": [
+          {
+            "key": "admin_level",
+            "values": [
+              {"uint": 2}
+            ],
+            "white_list": true
+          },
+          {
+            "key": "maritime",
+            "values": [
+              {"bool": true}
+            ],
+            "white_list": false
+          }
+        ],
+        "style": {
+          "fill": null,
+          "stroke": [2, 5]
+        }
+      }
+    ]
+  },
+  {
+    "layer_name": "streets",
+    "sub_types": [
+      {
+        "conditions": [
+          {
+            "key": "kind",
+            "values": [
+              {"string": "motorway"},
+              {"string": "trunk"}
+            ],
+            "white_list": true
+          },
+          {
+            "key": "rail",
+            "values": [{"bool": false}],
+            "white_list": true
+          },
+          {
+            "key": "tunnel",
+            "values": [{"bool": false}],
+            "white_list": true
+          }
+        ],
+        "style": {
+          "fill": null,
+          "stroke": [3, 3]
+        }
+      },
+      {
+        "conditions": [
+          {
+            "key": "kind",
+            "values": [
+              {"string": "primary"},
+              {"string": "secondary"}
+            ],
+            "white_list": true
+          },
+          {
+            "key": "rail",
+            "values": [{"bool": false}],
+            "white_list": true
+          },
+          {
+            "key": "tunnel",
+            "values": [{"bool": false}],
+            "white_list": true
+          }
+        ],
+        "style": {
+          "fill": null,
+          "stroke": [3, 3]
+        }
+      },
+      {
+        "conditions": [
+          {
+            "key": "kind",
+            "values": [
+              {"string": "tertiary"},
+              {"string": "residential"},
+              {"string": "cycleway"},
+              {"string": "living_street"},
+              {"string": "pedestrian"},
+              {"string": "service"}
+            ],
+            "white_list": true
+          },
+          {
+            "key": "rail",
+            "values": [{"bool": false}],
+            "white_list": true
+          },
+          {
+            "key": "tunnel",
+            "values": [{"bool": false}],
+            "white_list": true
+          }
+        ],
+        "style": {
+          "fill": null,
+          "stroke": [3, 3]
+        }
+      },
+      {
+        "conditions": [
+          {
+            "key": "kind",
+            "values": [
+              {"string": "path"},
+              {"string": "footway"},
+              {"string": "track"},
+              {"string": "unclassified"}
+            ],
+            "white_list": true
+          },
+          {
+            "key": "rail",
+            "values": [{"bool": false}],
+            "white_list": true
+          },
+          {
+            "key": "tunnel",
+            "values": [{"bool": false}],
+            "white_list": true
+          }
+        ],
+        "style": {
+          "fill": null,
+          "stroke": [3, 3]
+        }
+      }
+    ]
+  },
+  {
+    "layer_name": "street_polygons",
+    "sub_types": [
+      {
+        "conditions": [
+          {
+            "key": "bridge",
+            "values": [],
+            "white_list": true
+          },
+          {
+            "key": "kind",
+            "values": [],
+            "white_list": true
+          },
+          {
+            "key": "surface",
+            "values": [],
+            "white_list": true
+          },
+          {
+            "key": "tunnel",
+            "values": [],
+            "white_list": true
+          }
+        ],
+        "style": {
+          "fill": null,
+          "stroke": [3, 3]
+        }
+      }
+    ]
+  },
+  {
+    "layer_name": "buildings",
+    "sub_types": [
+      {
+        "conditions": [],
+        "style": {
+          "fill": 2,
+          "stroke": null
+        }
+      }
+    ]
+  }
+]

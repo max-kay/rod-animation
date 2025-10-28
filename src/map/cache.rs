@@ -18,10 +18,10 @@ pub struct MvtGetter {
 impl MvtGetter {
     pub fn new() -> Result<Self> {
         let mut file_cache = HashSet::new();
-        if !fs::exists(CACHE_PATH)? {
-            fs::create_dir(CACHE_PATH)?;
+        if !fs::exists(&*CACHE_PATH)? {
+            fs::create_dir(&*CACHE_PATH)?;
         }
-        for entry in fs::read_dir(CACHE_PATH)? {
+        for entry in fs::read_dir(&*CACHE_PATH)? {
             if let Ok(entry) = entry {
                 let path = entry.path();
                 if path.extension().and_then(|s| s.to_str()) != Some("mvt") {

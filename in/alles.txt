@@ -1,0 +1,12 @@
+Animation
+# Kommentar
+
+Mitte (44.75084371189879, 4.547112611268429)
+Zoom 3.4
+Zeit 0T18:30; 6T13:00
+
+Dauer 10.0
+
+Pins 
+Pingrösse 400
+Checkpoints
