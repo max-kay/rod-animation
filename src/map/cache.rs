@@ -32,7 +32,7 @@ impl MvtGetter {
                     .expect("valid because from read_dir")
                     .to_str()
                     .expect("these file names are valid utf-8")
-                    .strip_suffix("mvt")
+                    .strip_suffix(".mvt")
                     .expect("checked above")
                     .split("_");
                 file_cache.insert(TileDescr {
@@ -91,8 +91,6 @@ impl MvtGetter {
                 }
             }
         }
-
-        // return Ok(());
 
         debug!("requesting tile: z={} x={} y={}", tile.z, tile.x, tile.y);
         let response = self.client.get(&tile.to_url()).send()?;

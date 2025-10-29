@@ -30,55 +30,31 @@ use crate::{
 const WIDTH: usize = 1920 * 2;
 const HEIGHT: usize = 1080 * 2;
 const FRAME_RATE: f32 = 30.0;
-//
-// My default path (when no custom flag is passed)
+
 #[cfg(not(feature = "luca_build"))]
 const BASE_RES_PATH: LazyLock<PathBuf> = LazyLock::new(|| "./res".into());
 
-// Friend's custom path (when the 'friend_build' flag is passed)
 #[cfg(feature = "luca_build")]
 const BASE_RES_PATH: LazyLock<PathBuf> = LazyLock::new(|| "/Users/luca/rod".into());
 
 const IN_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
-    std::fs::read_to_string("./res/in")
+    std::fs::read_to_string(BASE_RES_PATH.join("in"))
         .expect("could not read in config file")
         .trim()
-        .to_string()
         .into()
 });
 const OUT_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
-    std::fs::read_to_string("./res/out")
+    std::fs::read_to_string(BASE_RES_PATH.join("out"))
         .expect("could not read out config file")
         .trim()
-        .to_string()
         .into()
 });
 
-const PINS_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
-    let mut path = BASE_RES_PATH.clone();
-    path.push("pins");
-    path
-});
-const TRACK_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
-    let mut path = BASE_RES_PATH.clone();
-    path.push("tracks");
-    path
-});
-const CACHE_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
-    let mut path = BASE_RES_PATH.clone();
-    path.push("cache");
-    path
-});
-const STYLE_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
-    let mut path = BASE_RES_PATH.clone();
-    path.push("style.json");
-    path
-});
-const HASHES_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
-    let mut path = BASE_RES_PATH.clone();
-    path.push("hashes.json");
-    path
-});
+const PINS_PATH: LazyLock<PathBuf> = LazyLock::new(|| BASE_RES_PATH.join("pins"));
+const TRACK_PATH: LazyLock<PathBuf> = LazyLock::new(|| BASE_RES_PATH.join("tracks"));
+const CACHE_PATH: LazyLock<PathBuf> = LazyLock::new(|| BASE_RES_PATH.join("cache"));
+const STYLE_PATH: LazyLock<PathBuf> = LazyLock::new(|| BASE_RES_PATH.join("style.json"));
+const HASHES_PATH: LazyLock<PathBuf> = LazyLock::new(|| BASE_RES_PATH.join("hashes.json"));
 
 const PEOPLE: &'static [&'static str] = &[
     "Clarissa", "Luca", "Flavio", "Louis", "Takashi", "Marc", "Ivo",

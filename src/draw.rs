@@ -341,7 +341,7 @@ impl Frame {
         }
     }
 
-    pub fn render(self) -> Image {
+    pub fn render(self) -> Bitmap {
         let info = ImageInfo::new(
             (WIDTH as i32, HEIGHT as i32),
             ColorType::N32,
@@ -386,7 +386,7 @@ impl Frame {
                 );
             }
         }
-        bitmap.as_image()
+        bitmap
     }
 }
 
@@ -425,7 +425,7 @@ impl Renderable for StillFrame {
         info!("loading tiles for {}", self.name);
         WORLD.load_tiles_at(frame.scene_pos)?;
         info!("finished loading tiles for {}", self.name);
-        let image: skia_safe::Image = frame.render();
+        let image: skia_safe::Image = frame.render().as_image();
         let mut file = std::fs::File::create(&self.get_file_name())?;
         skia_safe::png_encoder::encode(
             &image.peek_pixels().expect("failed to get pixels."),
@@ -614,7 +614,7 @@ fn make_video(frames: Vec<Frame>, name: &str, file_name: impl AsRef<path::Path>)
         .enumerate()
         .par_bridge()
         .map(|(i, frame)| -> Result<()> {
-            let image: skia_safe::Image = frame.render();
+            let image = frame.render().as_image();
             let mut file = std::fs::File::create(tmp_path.join(format!("frame{i:0>8}.png")))?;
             skia_safe::png_encoder::encode(
                 &image.peek_pixels().ok_or(anyhow!("could not get pixels"))?,
