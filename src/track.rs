@@ -34,7 +34,8 @@ pub fn get_tracks() -> Result<HashMap<String, Track>> {
 }
 
 pub const TIME_ZERO: LazyLock<NaiveDateTime> = LazyLock::new(|| {
-    NaiveDateTime::parse_from_str("2025-04-14T00:00:00", "%Y-%m-%dT%H:%M:%S").unwrap()
+    NaiveDateTime::parse_from_str("2025-04-14T00:00:00", "%Y-%m-%dT%H:%M:%S")
+        .expect("is valid format")
 });
 
 pub struct TrackingPoint {
@@ -54,11 +55,13 @@ impl Track {
         let mut points = Vec::new();
         for line in s.lines() {
             let mut split = line.split(",");
-            let lat = split.next().unwrap().parse()?;
-            let lon = split.next().unwrap().parse()?;
+            let lat = split.next().expect("tracks have valid format").parse()?;
+            let lon = split.next().expect("tracks have valid format").parse()?;
             let position = lat_long_to_vec(lat, lon);
-            let time = (NaiveDateTime::parse_from_str(split.next().unwrap(), "%Y-%m-%dT%H:%M:%S")?
-                - *TIME_ZERO)
+            let time = (NaiveDateTime::parse_from_str(
+                split.next().expect("tracks have valid format"),
+                "%Y-%m-%dT%H:%M:%S",
+            )? - *TIME_ZERO)
                 .num_seconds() as u32;
 
             points.push(TrackingPoint { time, position })
@@ -74,7 +77,7 @@ impl Track {
                     return Some(self.points[0].position);
                 }
                 if idx == self.points.len() {
-                    let last = self.points.last().unwrap();
+                    let last = self.points.last().expect("len is allways > 0");
                     if time - last.time < 60 * 60 * 5 {
                         return Some(last.position);
                     } else {
@@ -93,7 +96,8 @@ impl Track {
 
     pub fn valid_times(&self) -> String {
         let t_0 = chrono::Duration::seconds(self.points[0].time as i64);
-        let t_1 = chrono::Duration::seconds(self.points.last().unwrap().time as i64);
+        let t_1 =
+            chrono::Duration::seconds(self.points.last().expect("len allways > 0").time as i64);
         format!(
             "{}T{}:{} bis {}T{}:{}",
             t_0.num_days(),

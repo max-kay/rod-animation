@@ -28,19 +28,26 @@ impl MvtGetter {
                     continue;
                 }
                 let mut split = path
-                    .iter()
-                    .last()
-                    .unwrap()
+                    .file_name()
+                    .expect("valid because from read_dir")
                     .to_str()
-                    .unwrap()
-                    .split(".")
-                    .next()
-                    .unwrap()
+                    .expect("these file names are valid utf-8")
+                    .strip_suffix("mvt")
+                    .expect("checked above")
                     .split("_");
                 file_cache.insert(TileDescr {
-                    z: split.next().unwrap().parse()?,
-                    x: split.next().unwrap().parse()?,
-                    y: split.next().unwrap().parse()?,
+                    z: split
+                        .next()
+                        .expect("the file names in cache are valid")
+                        .parse()?,
+                    x: split
+                        .next()
+                        .expect("the file names in cache are valid")
+                        .parse()?,
+                    y: split
+                        .next()
+                        .expect("the file names in cache are valid")
+                        .parse()?,
                 });
             }
         }
@@ -115,7 +122,7 @@ mod test {
     use super::*;
     #[test]
     fn cache() {
-        let mut getter = MvtGetter::new().unwrap();
+        let mut getter = MvtGetter::new().expect("in test");
         let tile = TileDescr { z: 7, x: 66, y: 44 };
         getter.load_tile(tile).expect("could not get tile");
         drop(getter);

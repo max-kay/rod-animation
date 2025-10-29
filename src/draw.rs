@@ -552,7 +552,7 @@ impl Sweep {
             })
             .collect();
 
-        let last = *vec_scales.last().unwrap();
+        let last = *vec_scales.last().expect("len is allways > 1");
         let centers: Vec<_> = vec_scales
             .iter()
             .map(|x| {
@@ -613,16 +613,17 @@ fn make_video(frames: Vec<Frame>, name: &str, file_name: impl AsRef<path::Path>)
         .into_iter()
         .enumerate()
         .par_bridge()
-        .for_each(|(i, frame)| {
+        .map(|(i, frame)| -> Result<()> {
             let image: skia_safe::Image = frame.render();
-            let mut file =
-                std::fs::File::create(tmp_path.join(format!("frame{i:0>8}.png"))).unwrap();
+            let mut file = std::fs::File::create(tmp_path.join(format!("frame{i:0>8}.png")))?;
             skia_safe::png_encoder::encode(
-                &image.peek_pixels().expect("failed to get pixels."),
+                &image.peek_pixels().ok_or(anyhow!("could not get pixels"))?,
                 &mut file,
                 &skia_safe::png_encoder::Options::default(),
             );
-        });
+            Ok(())
+        })
+        .collect::<Result<()>>()?;
     info!("finished rendering {name}");
     info!("making video for {name}");
     Command::new("ffmpeg")
@@ -640,8 +641,8 @@ fn make_video(frames: Vec<Frame>, name: &str, file_name: impl AsRef<path::Path>)
 
     fs::remove_dir_all(tmp_path)?;
     info!(
-        "finished {name} output_file: {}",
-        file_name.as_ref().iter().last().unwrap().to_string_lossy()
+        "finished {name} output_file: {:?}",
+        file_name.as_ref().file_name().expect("is valid file name")
     );
     Ok(())
 }
@@ -663,7 +664,7 @@ mod test {
 
         LazyLock::force(&MAP_DATA);
         LazyLock::force(&WORLD);
-        let mut data_lock = MAP_DATA.write().unwrap();
+        let mut data_lock = MAP_DATA.write().expect("in test");
         for zoom_level in 4..=5 {
             for pos in poss {
                 let scene_pos = ScenePos {
@@ -674,8 +675,8 @@ mod test {
                 let tiles = WORLD.get_tiles_fixed(scene_pos, zoom_level);
                 for tile in tiles {
                     println!("{:?}", tile);
-                    data_lock.load_tile(tile).unwrap();
-                    data_lock.get_tile(tile).unwrap();
+                    data_lock.load_tile(tile).expect("in test");
+                    data_lock.get_tile(tile).expect("in test");
                 }
             }
         }

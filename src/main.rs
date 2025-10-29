@@ -41,14 +41,14 @@ const BASE_RES_PATH: LazyLock<PathBuf> = LazyLock::new(|| "/Users/luca/rod".into
 
 const IN_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
     std::fs::read_to_string("./res/in")
-        .unwrap()
+        .expect("could not read in config file")
         .trim()
         .to_string()
         .into()
 });
 const OUT_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
     std::fs::read_to_string("./res/out")
-        .unwrap()
+        .expect("could not read out config file")
         .trim()
         .to_string()
         .into()
@@ -330,7 +330,10 @@ fn main() {
                     if !(path.extension().and_then(|s| s.to_str()) == Some("txt")) {
                         continue;
                     }
-                    info!("reading file: {:?}", path.iter().last().unwrap());
+                    info!(
+                        "reading file: {:?}",
+                        path.iter().last().expect("allways has file name")
+                    );
                     match parse::from_path(&path) {
                         Ok(r) => {
                             {
@@ -363,10 +366,10 @@ fn main() {
         info!("write 'end' to quit")
     }
 
-    let mut file = File::create(&*HASHES_PATH).unwrap();
+    let mut file = File::create(&*HASHES_PATH).expect("could not create file hash file");
     serde_json::to_writer_pretty::<_, HashMap<String, String>>(
         &mut file,
-        &*FILE_HASHES.lock().unwrap(),
+        &*FILE_HASHES.lock().expect("file hashes is not poisoned"),
     )
-    .unwrap();
+    .expect("could not  write file hashes");
 }

@@ -19,19 +19,20 @@ macro_rules! error_on_none {
 }
 }
 
+/// panics if path has no file name or is not a txt
 pub fn from_path(path: impl AsRef<Path>) -> Result<Box<dyn Renderable>> {
     let name = path
         .as_ref()
         .iter()
         .last()
-        .unwrap()
+        .expect("path in renderable from path is allways valid by caller")
         .to_string_lossy()
         .to_string();
     let s = read_to_string(path)?;
 
     let this = from_str(
         name.strip_suffix(".txt")
-            .ok_or(anyhow!("extension was not .txt"))?,
+            .expect("is always txt from caller"),
         &s,
     )
     .ok_or(anyhow!("could not read file"))?;
@@ -53,7 +54,11 @@ fn from_str(name: &str, s: &str) -> Option<Box<dyn Renderable>> {
         .lines()
         .enumerate()
         .filter_map(|(i, s)| {
-            let new = s.trim().split('#').next().unwrap();
+            let new = s
+                .trim()
+                .split('#')
+                .next()
+                .expect("split has allways one element");
             if !new.is_empty() {
                 Some((i + 1, new))
             } else {
@@ -337,9 +342,9 @@ mod test {
     fn parse() {
         init();
         let s = include_str!("../../test_files/animation.txt");
-        from_str("example", s).unwrap();
+        from_str("example", s).expect("in test");
         let s = include_str!("../../test_files/image.txt");
-        from_str("example", s).unwrap();
+        from_str("example", s).expect("in test");
     }
 
     #[test]
