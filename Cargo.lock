@@ -1369,7 +1369,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "rod"
+name = "rod-animations"
 version = "0.1.0"
 dependencies = [
  "anyhow",
