@@ -1,12 +1,8 @@
 # Ride or Die Animator
 
-This crate contains the code for the Ride or Die animations.
+This crate contains the code for the animations used in the
+[YouTube series Ride or Die](https://youtu.be/vqlMh2oPuuY).
 
-## Map
-
-All map data is taken from openstreetmap
-
-https://vector.openstreetmap.org/shortbread_v1/tilejson.json
 
 ## Usage
 when running the code looks for input files in the `in` directory and renders them to `out`
@@ -42,5 +38,7 @@ Checkpoints # if present checkpoints will be displayed
 
 ## Map Data
 
-The data is taken from [openstreetmap][https://www.openstreetmap.org/copyright] using their
-vector tile service at https://vector.openstreetmap.org/shortbread_v1/{z}/{x}/{y}.mvt
+The data is taken from [openstreetmap](https://www.openstreetmap.org/copyright) using their
+vector tile service at
+
+[https://vector.openstreetmap.org/shortbread_v1/tilejson.json]
