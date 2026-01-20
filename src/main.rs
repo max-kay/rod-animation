@@ -312,16 +312,14 @@ fn main() {
                     );
                     match parse::from_path(&path) {
                         Ok(r) => {
+                            if let Some(val) = FILE_HASHES
+                                .lock()
+                                .expect("not poisoned")
+                                .get(&*path.to_string_lossy())
+                                && &*hash_file(&path) == val
+                                && std::path::Path::new(&r.get_file_name()).exists()
                             {
-                                if let Some(val) = FILE_HASHES
-                                    .lock()
-                                    .expect("not poisoned")
-                                    .get(&*path.to_string_lossy())
-                                    && &*hash_file(&path) == val
-                                    && std::path::Path::new(&r.get_file_name()).exists()
-                                {
-                                    continue;
-                                }
+                                continue;
                             }
                             process_renderable(path, r)
                         }

@@ -7,6 +7,6 @@ Zeit 1T8:30; 3T13:00
 
 Dauer 10.0
 
-Pins
+Pins Luca; Clarissa
 Pingrösse 400
 Checkpoints
