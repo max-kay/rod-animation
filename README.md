@@ -39,3 +39,8 @@ Pins Luca; Clarissa # which pins to use
 Pingrösse 400 # height of the pins in pixels
 Checkpoints # if present checkpoints will be displayed
 ```
+
+## Map Data
+
+The data is taken from [openstreetmap][https://www.openstreetmap.org/copyright] using their
+vector tile service at https://vector.openstreetmap.org/shortbread_v1/{z}/{x}/{y}.mvt
